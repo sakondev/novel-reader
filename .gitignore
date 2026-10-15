@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+_site/
+# Keep raw originals and private editorial work out of the public publishing repository
+**/source/
+**/archive/
+**/memory/
+**/work/
+**/reports/
+**/progress.json
+**/intake-report.md
+**/pilot-plan.md
+**/chapters/

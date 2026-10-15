@@ -1,0 +1,17 @@
+schema_version: 1
+novel_id: pick-up-grimoire-become-a-mage
+title_en: "I Picked Up a Grimoire and Became a Wizard"
+title_th: ""
+source_language: en
+target_language: th
+genre: ""
+rights_status: user_confirmed  # user confirmation 2026-10-15, not independently verified
+source_files: [] # list and hashes pending comprehensive source audit
+style_profile: "Fluent contemporary Thai; protagonist first-person defaults to ผม; preserve POV shifts"
+narrative_pov: unknown
+translation_policy:
+  preserve_paragraph_boundaries: true
+  no_omissions: true
+  require_human_acceptance: true
+  locked_glossary_enforced: true
+status: chapter_0001_final_qa_passed
