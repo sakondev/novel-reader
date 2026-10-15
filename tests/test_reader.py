@@ -1,10 +1,11 @@
 """Reader smoke tests; standard library only."""
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "reader"))
-from build import inline_md, layout, render_markdown, slugify
+from build import build, inline_md, layout, render_markdown, slugify
 
 class ReaderTests(unittest.TestCase):
     def test_escape_html(self):
@@ -24,6 +25,21 @@ class ReaderTests(unittest.TestCase):
         self.assertIn('name="robots" content="noindex, nofollow', page)
         self.assertIn('name="googlebot" content="noindex, nofollow', page)
         self.assertIn('name="bingbot" content="noindex, nofollow', page)
+
+    def test_clean_chapter_urls_and_resume_prompt(self):
+        with tempfile.TemporaryDirectory() as temp:
+            from pathlib import Path
+            build(Path(temp))
+            book = Path(temp) / "pick-up-grimoire-become-a-mage"
+            clean = (book / "chapter-0001" / "index.html").read_text(encoding="utf-8")
+            legacy = (book / "chapter-0001.html").read_text(encoding="utf-8")
+            toc = (book / "index.html").read_text(encoding="utf-8")
+            self.assertIn('id="resumePrompt"', clean)
+            self.assertIn('id="resumeReading"', clean)
+            self.assertIn('href="../../assets/style.css"', clean)
+            self.assertIn('href="chapter-0001/"', toc)
+            self.assertIn('url=chapter-0001/', legacy)
+            self.assertIn('noindex', legacy)
 
     def test_slug(self):
         self.assertEqual(slugify("Pick Up Grimoire - Become a Mage"), "pick-up-grimoire-become-a-mage")

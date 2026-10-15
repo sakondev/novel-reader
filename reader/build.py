@@ -93,12 +93,23 @@ def build(destination):
         for index, (num, md) in enumerate(chapters):
             raw = md.read_text(encoding="utf-8-sig")
             chapter_title = title_for(raw, f"บทที่ {num}")
-            prev_link = f'<a href="chapter-{chapters[index - 1][0]:04}.html">← ตอนก่อนหน้า</a>' if index else "<span></span>"
-            next_link = f'<a href="chapter-{chapters[index + 1][0]:04}.html">ตอนถัดไป →</a>' if index < len(chapters)-1 else "<span></span>"
-            nav = f'<nav class="chapter-nav" aria-label="นำทางตอน">{prev_link}<a href="index.html">สารบัญ</a>{next_link}</nav>'
-            body = f'<main id="content" class="reader"><div class="eyebrow"><a href="index.html">{html.escape(title)}</a></div><article>{render_markdown(raw)}</article>{nav}</main>'
-            (dest / f"chapter-{num:04}.html").write_text(layout(chapter_title, body, None, True, "../"), encoding="utf-8")
-        cards = "\n".join(f'<li><a href="chapter-{num:04}.html"><span>ตอนที่ {num}</span><span aria-hidden="true">→</span></a></li>' for num, _ in chapters)
+            prev_link = f'<a href="../chapter-{chapters[index - 1][0]:04}/">← ตอนก่อนหน้า</a>' if index else "<span></span>"
+            next_link = f'<a href="../chapter-{chapters[index + 1][0]:04}/">ตอนถัดไป →</a>' if index < len(chapters)-1 else "<span></span>"
+            nav = f'<nav class="chapter-nav" aria-label="นำทางตอน">{prev_link}<a href="../index.html">สารบัญ</a>{next_link}</nav>'
+            resume = '<aside class="resume-prompt" id="resumePrompt" role="region" aria-label="ตำแหน่งอ่านเดิม" hidden><span>อ่านต่อจากจุดเดิมไหม</span><div class="resume-actions"><button type="button" id="resumeReading">อ่านต่อจากจุดเดิม</button><button type="button" id="startReading">เริ่มจากด้านบน</button></div></aside>'
+            body = f'{resume}<main id="content" class="reader"><div class="eyebrow"><a href="../index.html">{html.escape(title)}</a></div><article>{render_markdown(raw)}</article>{nav}</main>'
+            chapter_dir = dest / f"chapter-{num:04}"
+            chapter_dir.mkdir(exist_ok=True)
+            (chapter_dir / "index.html").write_text(layout(chapter_title, body, None, True, "../../"), encoding="utf-8")
+            # Preserve bookmarked .html links without serving duplicate full-text pages.
+            link = f"chapter-{num:04}/"
+            redirect = ('<!doctype html><html lang="th"><head><meta charset="utf-8">'
+                        '<meta name="robots" content="noindex, nofollow">'
+                        f'<meta http-equiv="refresh" content="0; url={link}">'
+                        f'<link rel="canonical" href="{link}">'
+                        f'<title>{html.escape(chapter_title)}</title></head><body><a href="{link}">ไปยังตอนนี้</a></body></html>')
+            (dest / f"chapter-{num:04}.html").write_text(redirect, encoding="utf-8")
+        cards = "\n".join(f'<li><a href="chapter-{num:04}/"><span>ตอนที่ {num}</span><span aria-hidden="true">→</span></a></li>' for num, _ in chapters)
         page = f'<main id="content" class="index"><p class="eyebrow"><a href="../index.html">← นิยายทั้งหมด</a></p><h1>{html.escape(title)}</h1><p class="sub">จำนวน {len(chapters)} ตอน</p><ol class="chapters">{cards}</ol></main>'
         (dest / "index.html").write_text(layout(title, page, None, True, "../"), encoding="utf-8")
         books.append((slug,title,len(chapters),chapters[0][0]))
