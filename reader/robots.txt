@@ -1,0 +1,32 @@
+# Intended for https://sakondev.github.io/robots.txt (host root).
+# A copy at /novel-reader/robots.txt is NOT authoritative for crawlers.
+# The generated HTML also uses meta robots noindex on every page.
+User-agent: *
+Disallow: /novel-reader/
+
+User-agent: GPTBot
+Disallow: /novel-reader/
+
+User-agent: ChatGPT-User
+Disallow: /novel-reader/
+
+User-agent: OAI-SearchBot
+Disallow: /novel-reader/
+
+User-agent: ClaudeBot
+Disallow: /novel-reader/
+
+User-agent: Claude-User
+Disallow: /novel-reader/
+
+User-agent: CCBot
+Disallow: /novel-reader/
+
+User-agent: Google-Extended
+Disallow: /novel-reader/
+
+User-agent: PerplexityBot
+Disallow: /novel-reader/
+
+User-agent: Bytespider
+Disallow: /novel-reader/

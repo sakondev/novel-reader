@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "reader"))
-from build import inline_md, render_markdown, slugify
+from build import inline_md, layout, render_markdown, slugify
 
 class ReaderTests(unittest.TestCase):
     def test_escape_html(self):
@@ -18,6 +18,12 @@ class ReaderTests(unittest.TestCase):
         self.assertIn("<em>เน้น</em>", output)
         self.assertIn("<hr ", output)
         self.assertEqual(output.count("<p>"), 2)
+
+    def test_pages_request_no_indexing(self):
+        page = layout("Test", "<main>Text</main>", None, True, "../")
+        self.assertIn('name="robots" content="noindex, nofollow', page)
+        self.assertIn('name="googlebot" content="noindex, nofollow', page)
+        self.assertIn('name="bingbot" content="noindex, nofollow', page)
 
     def test_slug(self):
         self.assertEqual(slugify("Pick Up Grimoire - Become a Mage"), "pick-up-grimoire-become-a-mage")

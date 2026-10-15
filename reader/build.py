@@ -61,6 +61,7 @@ def book_title(path):
 def layout(title, body, css, js, base, chapter=False):
     script = f'<script defer src="{base}assets/reader.js"></script>' if js else ""
     return f"""<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex"><meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet, noimageindex"><meta name="bingbot" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
 <meta name="theme-color" content="#f7f3eb"><meta name="description" content="{html.escape(title, quote=True)}">
 <title>{html.escape(title)} · Novel Reader</title><link rel="stylesheet" href="{base}assets/style.css"></head>
 <body><a class="skip" href="#content">ข้ามไปเนื้อหา</a><header class="site-head"><a class="brand" href="{base}index.html">NOVEL READER</a>
@@ -105,6 +106,7 @@ def build(destination):
     items = "\n".join(f'<a class="book-card" href="{quote(slug)}/index.html"><span class="book-title">{html.escape(title)}</span><span>{count} ตอน <span aria-hidden="true">→</span></span></a>' for slug,title,count,_ in books)
     home = '<main id="content" class="index"><p class="eyebrow">ห้องสมุดของคุณ</p><h1>อ่านนิยาย</h1><p class="sub">เลือกเรื่องที่ต้องการอ่าน</p><div class="books">' + items + '</div></main>'
     (destination / "index.html").write_text(layout("ห้องสมุด",home,None,True,""), encoding="utf-8")
+    shutil.copyfile(ROOT / "reader" / "robots.txt", destination / "robots.txt")
     (destination / ".nojekyll").touch()
     print(f"Built {len(books)} books / {sum(v[2] for v in books)} chapters at {destination}")
 
