@@ -70,6 +70,7 @@ def layout(title, body, css, js, base, chapter=False):
     font_css = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">'
     body_class = ' class="chapter-view"' if chapter else ""
     listen_button = '<button id="ttsToggle" type="button" aria-controls="ttsPanel" aria-expanded="false" aria-label="เปิดตัวอ่านออกเสียง">🔊 ฟัง</button>' if chapter else ""
+    footer = "" if chapter else "<footer>Novel Reader · บันทึกตำแหน่งการอ่านบนอุปกรณ์ของคุณ</footer>"
     return f"""<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex"><meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet, noimageindex"><meta name="bingbot" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
 <meta name="theme-color" content="#f7f3eb"><meta name="description" content="{html.escape(title, quote=True)}">
@@ -77,7 +78,7 @@ def layout(title, body, css, js, base, chapter=False):
 <body{body_class}><a class="skip" href="#content">ข้ามไปเนื้อหา</a><header class="site-head"><a class="brand" href="{base}index.html">NOVEL READER</a>
 <div class="tools">{listen_button}<button id="fontDown" type="button" aria-label="ลดขนาดตัวอักษร">A−</button><span id="fontSizeValue" class="font-value" aria-live="polite">19px</span><button id="fontUp" type="button" aria-label="เพิ่มขนาดตัวอักษร">A+</button>
 <button id="theme" type="button" aria-label="เปลี่ยนธีม">◐</button></div></header>
-{body}<footer>Novel Reader · บันทึกตำแหน่งการอ่านบนอุปกรณ์ของคุณ</footer>{script}</body></html>"""
+{body}{footer}{script}</body></html>"""
 
 def build(destination):
     destination = destination.resolve()
@@ -105,9 +106,6 @@ def build(destination):
         for index, (num, md) in enumerate(chapters):
             raw = md.read_text(encoding="utf-8-sig")
             chapter_title = title_for(raw, f"บทที่ {num}")
-            prev_link = f'<a href="../chapter-{chapters[index - 1][0]:04}/">← ตอนก่อนหน้า</a>' if index else "<span></span>"
-            next_link = f'<a href="../chapter-{chapters[index + 1][0]:04}/">ตอนถัดไป →</a>' if index < len(chapters)-1 else "<span></span>"
-            nav = f'<nav class="chapter-nav" aria-label="นำทางตอน">{prev_link}<a href="../index.html">สารบัญ</a>{next_link}</nav>'
             resume = '<aside class="resume-prompt" id="resumePrompt" role="region" aria-label="ตำแหน่งอ่านเดิม" hidden><span>อ่านต่อจากจุดเดิมไหม</span><div class="resume-actions"><button type="button" id="resumeReading">อ่านต่อจากจุดเดิม</button><button type="button" id="startReading">เริ่มจากด้านบน</button></div></aside>'
             picker_items = "".join(
                 f'<a class="picker-chapter{" current" if chapter_num == num else ""}" href="../chapter-{chapter_num:04}/"'
@@ -145,7 +143,7 @@ def build(destination):
                    '<option value="0.75">0.75×</option><option value="1" selected>1×</option>'
                    '<option value="1.25">1.25×</option><option value="1.5">1.5×</option></select></div>'
                    '<p class="tts-note" id="ttsNote">เลือกเสียงภาษาไทยจากอุปกรณ์ของคุณ หากมี</p></section>')
-            body = f'{resume}<main id="content" class="reader"><div class="eyebrow"><a href="../index.html">{html.escape(title)}</a></div>{subtitle}<article>{render_markdown(raw)}</article>{nav}</main>{tts}{bottom}{picker}'
+            body = f'{resume}<main id="content" class="reader"><div class="eyebrow"><a href="../index.html">{html.escape(title)}</a></div>{subtitle}<article>{render_markdown(raw)}</article></main>{tts}{bottom}{picker}'
             chapter_dir = dest / f"chapter-{num:04}"
             chapter_dir.mkdir(exist_ok=True)
             (chapter_dir / "index.html").write_text(layout(chapter_title, body, None, True, "../../", chapter=True), encoding="utf-8")
