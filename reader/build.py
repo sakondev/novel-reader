@@ -69,12 +69,13 @@ def layout(title, body, css, js, base, chapter=False):
     script = f'<script defer src="{base}assets/reader.js"></script>' if js else ""
     font_css = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">'
     body_class = ' class="chapter-view"' if chapter else ""
+    listen_button = '<button id="ttsToggle" type="button" aria-controls="ttsPanel" aria-expanded="false" aria-label="เปิดตัวอ่านออกเสียง">🔊 ฟัง</button>' if chapter else ""
     return f"""<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex"><meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet, noimageindex"><meta name="bingbot" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
 <meta name="theme-color" content="#f7f3eb"><meta name="description" content="{html.escape(title, quote=True)}">
 <title>{html.escape(title)} · Novel Reader</title>{font_css}<link rel="stylesheet" href="{base}assets/style.css"></head>
 <body{body_class}><a class="skip" href="#content">ข้ามไปเนื้อหา</a><header class="site-head"><a class="brand" href="{base}index.html">NOVEL READER</a>
-<div class="tools"><button id="fontDown" type="button" aria-label="ลดขนาดตัวอักษร">A−</button><span id="fontSizeValue" class="font-value" aria-live="polite">19px</span><button id="fontUp" type="button" aria-label="เพิ่มขนาดตัวอักษร">A+</button>
+<div class="tools">{listen_button}<button id="fontDown" type="button" aria-label="ลดขนาดตัวอักษร">A−</button><span id="fontSizeValue" class="font-value" aria-live="polite">19px</span><button id="fontUp" type="button" aria-label="เพิ่มขนาดตัวอักษร">A+</button>
 <button id="theme" type="button" aria-label="เปลี่ยนธีม">◐</button></div></header>
 {body}<footer>Novel Reader · บันทึกตำแหน่งการอ่านบนอุปกรณ์ของคุณ</footer>{script}</body></html>"""
 
@@ -132,7 +133,19 @@ def build(destination):
                       f'<input id="chapterSearch" type="search" autocomplete="off" placeholder="เช่น 12 หรือชื่อตอน..." />'
                       f'<div class="picker-results" id="chapterResults">{picker_items}</div>'
                       f'<p class="picker-empty" id="chapterEmpty" hidden>ไม่พบตอนที่ค้นหา</p></dialog>')
-            body = f'{resume}<main id="content" class="reader"><div class="eyebrow"><a href="../index.html">{html.escape(title)}</a></div>{subtitle}<article>{render_markdown(raw)}</article>{nav}</main>{bottom}{picker}'
+            tts = ('<section id="ttsPanel" class="tts-panel" aria-label="เครื่องอ่านนิยาย" hidden>'
+                   '<div class="tts-heading"><strong>ฟังนิยาย</strong><span id="ttsStatus" role="status">พร้อมอ่าน</span>'
+                   '<button type="button" id="ttsClose" aria-label="ปิดเครื่องอ่าน">✕</button></div>'
+                   '<div class="tts-controls"><button type="button" id="ttsPlay">▶ อ่าน</button>'
+                   '<button type="button" id="ttsPause" disabled>⏸ พัก</button>'
+                   '<button type="button" id="ttsStop" disabled>■ หยุด</button></div>'
+                   '<div class="tts-options"><label for="ttsVoice">เสียงอ่าน</label><select id="ttsVoice" aria-label="เลือกเสียงอ่าน">'
+                   '<option value="">เสียงเริ่มต้น</option></select>'
+                   '<label for="ttsRate">ความเร็ว</label><select id="ttsRate" aria-label="ความเร็วการอ่าน">'
+                   '<option value="0.75">0.75×</option><option value="1" selected>1×</option>'
+                   '<option value="1.25">1.25×</option><option value="1.5">1.5×</option></select></div>'
+                   '<p class="tts-note" id="ttsNote">เลือกเสียงภาษาไทยจากอุปกรณ์ของคุณ หากมี</p></section>')
+            body = f'{resume}<main id="content" class="reader"><div class="eyebrow"><a href="../index.html">{html.escape(title)}</a></div>{subtitle}<article>{render_markdown(raw)}</article>{nav}</main>{tts}{bottom}{picker}'
             chapter_dir = dest / f"chapter-{num:04}"
             chapter_dir.mkdir(exist_ok=True)
             (chapter_dir / "index.html").write_text(layout(chapter_title, body, None, True, "../../", chapter=True), encoding="utf-8")
