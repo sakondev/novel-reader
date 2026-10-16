@@ -60,11 +60,13 @@ def book_title(path):
 
 def layout(title, body, css, js, base, chapter=False):
     script = f'<script defer src="{base}assets/reader.js"></script>' if js else ""
+    font_css = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">'
+    body_class = ' class="chapter-view"' if chapter else ""
     return f"""<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex"><meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet, noimageindex"><meta name="bingbot" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
 <meta name="theme-color" content="#f7f3eb"><meta name="description" content="{html.escape(title, quote=True)}">
-<title>{html.escape(title)} · Novel Reader</title><link rel="stylesheet" href="{base}assets/style.css"></head>
-<body><a class="skip" href="#content">ข้ามไปเนื้อหา</a><header class="site-head"><a class="brand" href="{base}index.html">NOVEL READER</a>
+<title>{html.escape(title)} · Novel Reader</title>{font_css}<link rel="stylesheet" href="{base}assets/style.css"></head>
+<body{body_class}><a class="skip" href="#content">ข้ามไปเนื้อหา</a><header class="site-head"><a class="brand" href="{base}index.html">NOVEL READER</a>
 <div class="tools"><button id="fontDown" type="button" aria-label="ลดขนาดตัวอักษร">A−</button><span id="fontSizeValue" class="font-value" aria-live="polite">19px</span><button id="fontUp" type="button" aria-label="เพิ่มขนาดตัวอักษร">A+</button>
 <button id="theme" type="button" aria-label="เปลี่ยนธีม">◐</button></div></header>
 {body}<footer>Novel Reader · บันทึกตำแหน่งการอ่านบนอุปกรณ์ของคุณ</footer>{script}</body></html>"""
@@ -97,10 +99,34 @@ def build(destination):
             next_link = f'<a href="../chapter-{chapters[index + 1][0]:04}/">ตอนถัดไป →</a>' if index < len(chapters)-1 else "<span></span>"
             nav = f'<nav class="chapter-nav" aria-label="นำทางตอน">{prev_link}<a href="../index.html">สารบัญ</a>{next_link}</nav>'
             resume = '<aside class="resume-prompt" id="resumePrompt" role="region" aria-label="ตำแหน่งอ่านเดิม" hidden><span>อ่านต่อจากจุดเดิมไหม</span><div class="resume-actions"><button type="button" id="resumeReading">อ่านต่อจากจุดเดิม</button><button type="button" id="startReading">เริ่มจากด้านบน</button></div></aside>'
-            body = f'{resume}<main id="content" class="reader"><div class="eyebrow"><a href="../index.html">{html.escape(title)}</a></div><article>{render_markdown(raw)}</article>{nav}</main>'
+            picker_items = "".join(
+                f'<a class="picker-chapter{" current" if chapter_num == num else ""}" href="../chapter-{chapter_num:04}/"'
+                f'{" aria-current=page" if chapter_num == num else ""}>'
+                f'<span>ตอนที่ {chapter_num}</span><small>{html.escape(title_for(chapter_md.read_text(encoding="utf-8-sig"), f"บทที่ {chapter_num}"))}</small></a>'
+                for chapter_num, chapter_md in chapters
+            )
+            prev_bottom = (f'<a class="bottom-link" href="../chapter-{chapters[index - 1][0]:04}/" aria-label="ตอนก่อนหน้า">'
+                           '<span class="nav-icon" aria-hidden="true">‹</span><span>ก่อนหน้า</span></a>') if index else (
+                           '<span class="bottom-link unavailable" aria-disabled="true"><span class="nav-icon">‹</span><span>ก่อนหน้า</span></span>')
+            next_bottom = (f'<a class="bottom-link" href="../chapter-{chapters[index + 1][0]:04}/" aria-label="ตอนถัดไป">'
+                           '<span class="nav-icon" aria-hidden="true">›</span><span>ถัดไป</span></a>') if index < len(chapters)-1 else (
+                           '<span class="bottom-link unavailable" aria-disabled="true"><span class="nav-icon">›</span><span>ถัดไป</span></span>')
+            bottom = (f'<nav class="bottom-nav" aria-label="เลือกตอน">{prev_bottom}'
+                      f'<button type="button" id="openChapterPicker" class="bottom-current" aria-haspopup="dialog" aria-controls="chapterPicker">'
+                      f'<span class="bottom-current-title">ตอนที่ {num} <span aria-hidden="true">⌄</span></span><span class="bottom-current-caption">เลือกตอน / ค้นหาตอน</span></button>'
+                      f'{next_bottom}</nav>')
+            picker = (f'<dialog id="chapterPicker" class="chapter-picker" aria-labelledby="pickerTitle">'
+                      f'<div class="picker-heading"><div><strong id="pickerTitle">เลือกตอนที่ต้องการอ่าน</strong>'
+                      f'<p>ทั้งหมด {len(chapters)} ตอน</p></div><form method="dialog">'
+                      f'<button type="submit" aria-label="ปิดรายการตอน">✕</button></form></div>'
+                      f'<label class="picker-search-label" for="chapterSearch">ค้นหาหมายเลขหรือชื่อตอน</label>'
+                      f'<input id="chapterSearch" type="search" autocomplete="off" placeholder="เช่น 12 หรือชื่อตอน..." />'
+                      f'<div class="picker-results" id="chapterResults">{picker_items}</div>'
+                      f'<p class="picker-empty" id="chapterEmpty" hidden>ไม่พบตอนที่ค้นหา</p></dialog>')
+            body = f'{resume}<main id="content" class="reader"><div class="eyebrow"><a href="../index.html">{html.escape(title)}</a></div><article>{render_markdown(raw)}</article>{nav}</main>{bottom}{picker}'
             chapter_dir = dest / f"chapter-{num:04}"
             chapter_dir.mkdir(exist_ok=True)
-            (chapter_dir / "index.html").write_text(layout(chapter_title, body, None, True, "../../"), encoding="utf-8")
+            (chapter_dir / "index.html").write_text(layout(chapter_title, body, None, True, "../../", chapter=True), encoding="utf-8")
             # Preserve bookmarked .html links without serving duplicate full-text pages.
             link = f"chapter-{num:04}/"
             redirect = ('<!doctype html><html lang="th"><head><meta charset="utf-8">'

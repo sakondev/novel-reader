@@ -30,6 +30,35 @@
     localStorage.setItem(key+'theme',theme);
   });
 
+  const picker = document.getElementById('chapterPicker');
+  const pickerButton = document.getElementById('openChapterPicker');
+  const chapterSearch = document.getElementById('chapterSearch');
+  const resultLinks = [...(document.querySelectorAll('#chapterResults .picker-chapter') || [])];
+  const emptyMessage = document.getElementById('chapterEmpty');
+  pickerButton?.addEventListener('click',()=>{
+    if (!picker) return;
+    picker.showModal();
+    if (chapterSearch) {
+      chapterSearch.value = '';
+      chapterSearch.dispatchEvent(new Event('input'));
+      chapterSearch.focus();
+    }
+    document.querySelector('.picker-chapter.current')?.scrollIntoView({block:'nearest'});
+  });
+  chapterSearch?.addEventListener('input',()=>{
+    const term = chapterSearch.value.trim().toLocaleLowerCase('th');
+    let visible = 0;
+    for (const link of resultLinks) {
+      const match = link.textContent.toLocaleLowerCase('th').includes(term);
+      link.hidden = !match;
+      if (match) visible++;
+    }
+    if (emptyMessage) emptyMessage.hidden = visible !== 0;
+  });
+  picker?.addEventListener('click',(event)=>{
+    if (event.target === picker) picker.close();
+  });
+
   if (/\/chapter-\d{4}(?:\/|\.html$)/.test(location.pathname)) {
     // A single reading-progress key works for clean URLs and old .html bookmarks.
     const chapterPath = location.pathname.replace(/\.html$/,'/').replace(/\/index\.html$/,'/');
