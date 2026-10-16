@@ -113,7 +113,7 @@ def build(destination):
                            '<span class="bottom-link unavailable" aria-disabled="true"><span class="nav-icon">›</span><span>ถัดไป</span></span>')
             bottom = (f'<nav class="bottom-nav" aria-label="เลือกตอน">{prev_bottom}'
                       f'<button type="button" id="openChapterPicker" class="bottom-current" aria-haspopup="dialog" aria-controls="chapterPicker">'
-                      f'<span class="bottom-current-title">ตอนที่ {num} <span aria-hidden="true">⌄</span></span><span class="bottom-current-caption">เลือกตอน / ค้นหาตอน</span></button>'
+                      f'<span class="bottom-current-title">ตอนที่ {num}</span><span class="bottom-current-caption">เลือกตอน / ค้นหาตอน</span></button>'
                       f'{next_bottom}</nav>')
             picker = (f'<dialog id="chapterPicker" class="chapter-picker" aria-labelledby="pickerTitle">'
                       f'<div class="picker-heading"><div><strong id="pickerTitle">เลือกตอนที่ต้องการอ่าน</strong>'
@@ -135,7 +135,13 @@ def build(destination):
                         f'<link rel="canonical" href="{link}">'
                         f'<title>{html.escape(chapter_title)}</title></head><body><a href="{link}">ไปยังตอนนี้</a></body></html>')
             (dest / f"chapter-{num:04}.html").write_text(redirect, encoding="utf-8")
-        cards = "\n".join(f'<li><a href="chapter-{num:04}/"><span>ตอนที่ {num}</span><span aria-hidden="true">→</span></a></li>' for num, _ in chapters)
+        cards = []
+        for num, md in chapters:
+            heading = title_for(md.read_text(encoding="utf-8-sig"), f"บทที่ {num}")
+            chapter_name = re.sub(rf"^บทที่\s*{num}\s*[-–—:]\s*", "", heading).strip()
+            label = f"ตอนที่ {num} - {chapter_name}" if chapter_name != f"บทที่ {num}" else f"ตอนที่ {num}"
+            cards.append(f'<li><a href="chapter-{num:04}/"><span>{html.escape(label)}</span><span aria-hidden="true">→</span></a></li>')
+        cards = "\n".join(cards)
         page = f'<main id="content" class="index"><p class="eyebrow"><a href="../index.html">← นิยายทั้งหมด</a></p><h1>{html.escape(title)}</h1><p class="sub">จำนวน {len(chapters)} ตอน</p><ol class="chapters">{cards}</ol></main>'
         (dest / "index.html").write_text(layout(title, page, None, True, "../"), encoding="utf-8")
         books.append((slug,title,len(chapters),chapters[0][0]))

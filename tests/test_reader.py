@@ -44,6 +44,9 @@ class ReaderTests(unittest.TestCase):
             self.assertIn('id="resumeReading"', clean)
             self.assertIn('href="../../assets/style.css"', clean)
             self.assertIn('href="chapter-0001/"', toc)
+            self.assertIn("ตอนที่ 1 - มาฝึกเป็นจอมเวทกันเถอะ (1)", toc)
+            self.assertIn("เลือกตอน / ค้นหาตอน", clean)
+            self.assertNotIn("⌄", clean) 
             self.assertIn('url=chapter-0001/', legacy)
             self.assertIn('noindex', legacy)
 
