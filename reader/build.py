@@ -58,6 +58,13 @@ def book_title(path):
             if m and m.group(1).strip(): return m.group(1).strip()
     return path.name
 
+def book_title_en(path):
+    config = path / "novel.yaml"
+    if config.exists():
+        m = re.search(r'(?m)^title_en:\s*["\']?([^\r\n"\']+)', config.read_text(encoding="utf-8"))
+        if m and m.group(1).strip(): return m.group(1).strip()
+    return ""
+
 def layout(title, body, css, js, base, chapter=False):
     script = f'<script defer src="{base}assets/reader.js"></script>' if js else ""
     font_css = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">'
@@ -90,6 +97,8 @@ def build(destination):
         slug = slugify(directory.name)
         if any(x[0] == slug for x in books): raise ValueError(f"Book slug collision: {slug}")
         title = book_title(directory)
+        english_title = book_title_en(directory)
+        subtitle = f'<p class="book-subtitle" lang="en">{html.escape(english_title)}</p>' if english_title and english_title != title else ""
         dest = destination / slug
         dest.mkdir(exist_ok=True)
         for index, (num, md) in enumerate(chapters):
@@ -123,7 +132,7 @@ def build(destination):
                       f'<input id="chapterSearch" type="search" autocomplete="off" placeholder="เช่น 12 หรือชื่อตอน..." />'
                       f'<div class="picker-results" id="chapterResults">{picker_items}</div>'
                       f'<p class="picker-empty" id="chapterEmpty" hidden>ไม่พบตอนที่ค้นหา</p></dialog>')
-            body = f'{resume}<main id="content" class="reader"><div class="eyebrow"><a href="../index.html">{html.escape(title)}</a></div><article>{render_markdown(raw)}</article>{nav}</main>{bottom}{picker}'
+            body = f'{resume}<main id="content" class="reader"><div class="eyebrow"><a href="../index.html">{html.escape(title)}</a></div>{subtitle}<article>{render_markdown(raw)}</article>{nav}</main>{bottom}{picker}'
             chapter_dir = dest / f"chapter-{num:04}"
             chapter_dir.mkdir(exist_ok=True)
             (chapter_dir / "index.html").write_text(layout(chapter_title, body, None, True, "../../", chapter=True), encoding="utf-8")
@@ -142,16 +151,16 @@ def build(destination):
             label = f"ตอนที่ {num} - {chapter_name}" if chapter_name != f"บทที่ {num}" else f"ตอนที่ {num}"
             cards.append(f'<li><a href="chapter-{num:04}/"><span>{html.escape(label)}</span><span aria-hidden="true">→</span></a></li>')
         cards = "\n".join(cards)
-        page = f'<main id="content" class="index"><p class="eyebrow"><a href="../index.html">← นิยายทั้งหมด</a></p><h1>{html.escape(title)}</h1><p class="sub">จำนวน {len(chapters)} ตอน</p><ol class="chapters">{cards}</ol></main>'
+        page = f'<main id="content" class="index"><p class="eyebrow"><a href="../index.html">← นิยายทั้งหมด</a></p><h1>{html.escape(title)}</h1>{subtitle}<p class="sub">จำนวน {len(chapters)} ตอน</p><ol class="chapters">{cards}</ol></main>'
         (dest / "index.html").write_text(layout(title, page, None, True, "../"), encoding="utf-8")
-        books.append((slug,title,len(chapters),chapters[0][0]))
+        books.append((slug,title,english_title,len(chapters),chapters[0][0]))
     if not books: raise ValueError("No canonical translated/chapter-NNNN.md files found")
-    items = "\n".join(f'<a class="book-card" href="{quote(slug)}/index.html"><span class="book-title">{html.escape(title)}</span><span>{count} ตอน <span aria-hidden="true">→</span></span></a>' for slug,title,count,_ in books)
+    items = "\n".join(f'<a class="book-card" href="{quote(slug)}/index.html"><span class="book-label"><strong class="book-title">{html.escape(title)}</strong><span class="book-subtitle" lang="en">{html.escape(english_title)}</span></span><span>{count} ตอน <span aria-hidden="true">→</span></span></a>' for slug,title,english_title,count,_ in books)
     home = '<main id="content" class="index"><p class="eyebrow">ห้องสมุดของคุณ</p><h1>อ่านนิยาย</h1><p class="sub">เลือกเรื่องที่ต้องการอ่าน</p><div class="books">' + items + '</div></main>'
     (destination / "index.html").write_text(layout("ห้องสมุด",home,None,True,""), encoding="utf-8")
     shutil.copyfile(ROOT / "reader" / "robots.txt", destination / "robots.txt")
     (destination / ".nojekyll").touch()
-    print(f"Built {len(books)} books / {sum(v[2] for v in books)} chapters at {destination}")
+    print(f"Built {len(books)} books / {sum(v[3] for v in books)} chapters at {destination}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

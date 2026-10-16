@@ -30,6 +30,14 @@
     localStorage.setItem(key+'theme',theme);
   });
 
+  // Light deterrent for casual copying of chapter prose; not content access control.
+  const prose = document.querySelector('.reader article');
+  if (prose) {
+    for (const type of ['copy','cut','contextmenu','dragstart']) {
+      prose.addEventListener(type,(event)=>event.preventDefault());
+    }
+  }
+
   const picker = document.getElementById('chapterPicker');
   const pickerButton = document.getElementById('openChapterPicker');
   const chapterSearch = document.getElementById('chapterSearch');
