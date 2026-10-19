@@ -46,6 +46,34 @@
     const close = document.getElementById('audioClose');
     const rate = document.getElementById('audioRate');
     const status = document.getElementById('audioStatus');
+    const playButton = document.getElementById('audioPlay');
+    const backButton = document.getElementById('audioBack');
+    const forwardButton = document.getElementById('audioForward');
+    const seek = document.getElementById('audioSeek');
+    const currentLabel = document.getElementById('audioCurrent');
+    const durationLabel = document.getElementById('audioDuration');
+    const formatTime = seconds => {
+      if (!Number.isFinite(seconds)) return '0:00';
+      const value = Math.floor(seconds);
+      return Math.floor(value / 60)+':'+String(value % 60).padStart(2,'0');
+    };
+    const syncPlayer = () => {
+      const duration = Number.isFinite(audio.duration) ? audio.duration : 0;
+      seek.value = duration ? String(Math.round(audio.currentTime / duration * 1000)) : '0';
+      currentLabel.textContent = formatTime(audio.currentTime);
+      durationLabel.textContent = formatTime(duration);
+      playButton.textContent = audio.paused ? '▶' : 'Ⅱ';
+      playButton.setAttribute('aria-label',audio.paused ? 'เล่นเสียง' : 'พักเสียง');
+    };
+    playButton.addEventListener('click',()=> {
+      if (audio.paused) audio.play().catch(()=>{status.textContent='ไม่สามารถเล่นเสียงได้';});
+      else audio.pause();
+    });
+    backButton.addEventListener('click',()=> { audio.currentTime = Math.max(0,audio.currentTime-10); });
+    forwardButton.addEventListener('click',()=> { if (Number.isFinite(audio.duration)) audio.currentTime=Math.min(audio.duration,audio.currentTime+10); });
+    seek.addEventListener('input',()=> { if (Number.isFinite(audio.duration)) audio.currentTime=audio.duration*Number(seek.value)/1000; });
+    for (const eventName of ['loadedmetadata','timeupdate','play','pause','seeking','ended']) audio.addEventListener(eventName,syncPlayer);
+    audio.addEventListener('contextmenu',event=>event.preventDefault());
     const playbackKey = key+'audio:'+location.pathname.replace(/index\.html$/,'').replace(/\.html$/,'/');
     const saved = Number(localStorage.getItem(playbackKey) || 0);
     const storedRate = localStorage.getItem(key+'audio-rate') || '1';
