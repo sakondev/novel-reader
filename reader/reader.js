@@ -76,13 +76,23 @@
     audio.addEventListener('contextmenu',event=>event.preventDefault());
     const playbackKey = key+'audio:'+location.pathname.replace(/index\.html$/,'').replace(/\.html$/,'/');
     const saved = Number(localStorage.getItem(playbackKey) || 0);
-    const storedRate = localStorage.getItem(key+'audio-rate') || '1';
-    if ([...rate.options].some(option => option.value === storedRate)) rate.value = storedRate;
-    audio.playbackRate = Number(rate.value);
-    rate.addEventListener('change',()=> {
-      audio.playbackRate = Number(rate.value);
-      localStorage.setItem(key+'audio-rate',rate.value);
-    });
+    const speeds = [0.75, 1, 1.25, 1.5, 1.75, 2];
+    const slower = document.getElementById('audioSlower');
+    const faster = document.getElementById('audioFaster');
+    const savedRate = Number(localStorage.getItem(key+'audio-rate'));
+    let speedIndex = speeds.indexOf(savedRate);
+    if (speedIndex < 0) speedIndex = 1;
+    const applyRate = () => {
+      const value = speeds[speedIndex];
+      audio.playbackRate = value;
+      rate.textContent = value+'×';
+      slower.disabled = speedIndex === 0;
+      faster.disabled = speedIndex === speeds.length-1;
+      localStorage.setItem(key+'audio-rate',String(value));
+    };
+    slower.addEventListener('click',()=> {speedIndex=Math.max(0,speedIndex-1);applyRate();});
+    faster.addEventListener('click',()=> {speedIndex=Math.min(speeds.length-1,speedIndex+1);applyRate();});
+    applyRate();
     let restored = false;
     audio.addEventListener('loadedmetadata',()=> {
       if (!restored && Number.isFinite(saved) && saved > 0 && saved < audio.duration-3) audio.currentTime = saved;
@@ -129,7 +139,6 @@
     if (chapterSearch) {
       chapterSearch.value = '';
       chapterSearch.dispatchEvent(new Event('input'));
-      chapterSearch.focus();
     }
     document.querySelector('.picker-chapter.current')?.scrollIntoView({block:'nearest'});
   });

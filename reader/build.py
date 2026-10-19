@@ -149,17 +149,13 @@ def build(destination):
             if audio_url:
                 safe_url = html.escape(audio_url, quote=True)
                 audio = (f'<section id="audioPanel" class="audio-panel" aria-label="เครื่องเล่นนิยายเสียง" hidden>'
-                         f'<div class="audio-heading"><strong>ฟังนิยาย — ตอนที่ {num}</strong>'
+                         '<div class="audio-heading">'
                          '<button id="audioClose" type="button" aria-label="ปิดเครื่องเล่น">✕</button></div>'
                          f'<audio id="chapterAudio" preload="metadata" controlslist="nodownload noplaybackrate" src="{safe_url}"></audio>'
                          '<div class="audio-controls"><button id="audioBack" type="button" aria-label="ย้อนกลับ 10 วินาที">↶ 10</button><button id="audioPlay" type="button" aria-label="เล่นเสียง">▶</button><button id="audioForward" type="button" aria-label="ข้าม 10 วินาที">10 ↷</button></div>'
                          '<input id="audioSeek" type="range" min="0" max="1000" value="0" aria-label="เลื่อนตำแหน่งเสียง">'
                          '<div class="audio-times"><span id="audioCurrent">0:00</span><span id="audioDuration">0:00</span></div>'
-                         '<div class="audio-options"><label for="audioRate">ความเร็ว</label>'
-                         '<select id="audioRate"><option value="0.75">0.75×</option><option value="1">1×</option>'
-                         '<option value="1.25">1.25×</option><option value="1.5">1.5×</option>'
-                         '<option value="2">2×</option></select>'
-                         '<span id="audioStatus" role="status">พร้อมเล่นไฟล์เสียง</span></div></section>')
+                         '<div class="audio-options"><span>ความเร็ว</span><button id="audioSlower" type="button" aria-label="ลดความเร็ว">−</button><output id="audioRate" aria-live="polite">1×</output><button id="audioFaster" type="button" aria-label="เพิ่มความเร็ว">+</button></div><span id="audioStatus" class="sr-only" role="status"></span></section>')
             body = f'{resume}<main id="content" class="reader"><div class="book-heading"><a class="book-heading-title" href="../index.html">{html.escape(title)}</a>{subtitle}</div><article>{render_markdown(raw)}</article></main>{audio}{bottom}{picker}'
             chapter_dir = dest / f"chapter-{num:04}"
             chapter_dir.mkdir(exist_ok=True)
