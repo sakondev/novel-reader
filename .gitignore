@@ -3,6 +3,7 @@ __pycache__/
 *.pyc
 .env
 _site/
+dist/
 # Keep raw originals and private editorial work out of the public publishing repository
 **/source/
 **/archive/

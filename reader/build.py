@@ -83,7 +83,7 @@ def layout(title, body, css, js, base, chapter=False, has_audio=False):
 
 def build(destination):
     destination = destination.resolve()
-    if destination == ROOT or ROOT in destination.parents and destination.name != "_site":
+    if destination == ROOT or (ROOT in destination.parents and destination not in {ROOT / "_site", ROOT / "dist"}):
         raise ValueError("Output must be a separate site directory, not overwrite source files")
     destination.mkdir(parents=True, exist_ok=True)
     assets = destination / "assets"
