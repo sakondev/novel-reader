@@ -2,6 +2,7 @@
 """Small, dependency-free Markdown novel reader static site generator."""
 import argparse
 import html
+import json
 import re
 import shutil
 import unicodedata
@@ -65,11 +66,11 @@ def book_title_en(path):
         if m and m.group(1).strip(): return m.group(1).strip()
     return ""
 
-def layout(title, body, css, js, base, chapter=False):
+def layout(title, body, css, js, base, chapter=False, has_audio=False):
     script = f'<script defer src="{base}assets/reader.js"></script>' if js else ""
     font_css = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">'
     body_class = ' class="chapter-view"' if chapter else ""
-    listen_button = '<button id="ttsToggle" type="button" aria-controls="ttsPanel" aria-expanded="false" aria-label="เปิดตัวอ่านออกเสียง">🔊 ฟัง</button>' if chapter else ""
+    listen_button = '<button id="audioToggle" type="button" aria-controls="audioPanel" aria-expanded="false" aria-label="เปิดเครื่องเล่นนิยายเสียง">🎧 ฟัง</button>' if has_audio else ""
     footer = "" if chapter else "<footer>Novel Reader · บันทึกตำแหน่งการอ่านบนอุปกรณ์ของคุณ</footer>"
     return f"""<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex"><meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet, noimageindex"><meta name="bingbot" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
@@ -101,6 +102,13 @@ def build(destination):
         title = book_title(directory)
         english_title = book_title_en(directory)
         subtitle = f'<p class="book-subtitle" lang="en">{html.escape(english_title)}</p>' if english_title and english_title != title else ""
+        audio_file = directory / "audio.json"
+        audio_map = {}
+        if audio_file.exists():
+            audio_data = json.loads(audio_file.read_text(encoding="utf-8"))
+            audio_map = audio_data.get("chapters", {})
+            if not isinstance(audio_map, dict):
+                raise ValueError(f"Invalid audio chapters in {audio_file}")
         dest = destination / slug
         dest.mkdir(exist_ok=True)
         for index, (num, md) in enumerate(chapters):
@@ -131,22 +139,28 @@ def build(destination):
                       f'<input id="chapterSearch" type="search" autocomplete="off" placeholder="เช่น 12 หรือชื่อตอน..." />'
                       f'<div class="picker-results" id="chapterResults">{picker_items}</div>'
                       f'<p class="picker-empty" id="chapterEmpty" hidden>ไม่พบตอนที่ค้นหา</p></dialog>')
-            tts = ('<section id="ttsPanel" class="tts-panel" aria-label="เครื่องอ่านนิยาย" hidden>'
-                   '<div class="tts-heading"><strong>ฟังนิยาย</strong><span id="ttsStatus" role="status">พร้อมอ่าน</span>'
-                   '<button type="button" id="ttsClose" aria-label="ปิดเครื่องอ่าน">✕</button></div>'
-                   '<div class="tts-controls"><button type="button" id="ttsPlay">▶ อ่าน</button>'
-                   '<button type="button" id="ttsPause" disabled>⏸ พัก</button>'
-                   '<button type="button" id="ttsStop" disabled>■ หยุด</button></div>'
-                   '<div class="tts-options"><label for="ttsVoice">เสียงอ่าน</label><select id="ttsVoice" aria-label="เลือกเสียงอ่าน">'
-                   '<option value="">เสียงเริ่มต้น</option></select>'
-                   '<label for="ttsRate">ความเร็ว</label><select id="ttsRate" aria-label="ความเร็วการอ่าน">'
-                   '<option value="0.75">0.75×</option><option value="1" selected>1×</option>'
-                   '<option value="1.25">1.25×</option><option value="1.5">1.5×</option></select></div>'
-                   '<p class="tts-note" id="ttsNote">เลือกเสียงภาษาไทยจากอุปกรณ์ของคุณ หากมี</p></section>')
-            body = f'{resume}<main id="content" class="reader"><div class="eyebrow"><a href="../index.html">{html.escape(title)}</a></div>{subtitle}<article>{render_markdown(raw)}</article></main>{tts}{bottom}{picker}'
+            audio_info = audio_map.get(str(num), {})
+            if not isinstance(audio_info, dict):
+                raise ValueError(f"Invalid audio chapter {num} in {audio_file}")
+            audio_url = audio_info.get("url", "")
+            if audio_url and (not isinstance(audio_url, str) or not audio_url.startswith("https://")):
+                raise ValueError(f"Audio URL must use HTTPS: chapter {num}")
+            audio = ""
+            if audio_url:
+                safe_url = html.escape(audio_url, quote=True)
+                audio = (f'<section id="audioPanel" class="audio-panel" aria-label="เครื่องเล่นนิยายเสียง" hidden>'
+                         f'<div class="audio-heading"><strong>ฟังนิยาย — ตอนที่ {num}</strong>'
+                         '<button id="audioClose" type="button" aria-label="ปิดเครื่องเล่น">✕</button></div>'
+                         f'<audio id="chapterAudio" preload="metadata" controls src="{safe_url}"></audio>'
+                         '<div class="audio-options"><label for="audioRate">ความเร็ว</label>'
+                         '<select id="audioRate"><option value="0.75">0.75×</option><option value="1">1×</option>'
+                         '<option value="1.25">1.25×</option><option value="1.5">1.5×</option>'
+                         '<option value="2">2×</option></select>'
+                         '<span id="audioStatus" role="status">พร้อมเล่นไฟล์เสียง</span></div></section>')
+            body = f'{resume}<main id="content" class="reader"><div class="eyebrow"><a href="../index.html">{html.escape(title)}</a></div>{subtitle}<article>{render_markdown(raw)}</article></main>{audio}{bottom}{picker}'
             chapter_dir = dest / f"chapter-{num:04}"
             chapter_dir.mkdir(exist_ok=True)
-            (chapter_dir / "index.html").write_text(layout(chapter_title, body, None, True, "../../", chapter=True), encoding="utf-8")
+            (chapter_dir / "index.html").write_text(layout(chapter_title, body, None, True, "../../", chapter=True, has_audio=bool(audio_url)), encoding="utf-8")
             # Preserve bookmarked .html links without serving duplicate full-text pages.
             link = f"chapter-{num:04}/"
             redirect = ('<!doctype html><html lang="th"><head><meta charset="utf-8">'
