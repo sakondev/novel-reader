@@ -61,7 +61,8 @@
       seek.value = duration ? String(Math.round(audio.currentTime / duration * 1000)) : '0';
       currentLabel.textContent = formatTime(audio.currentTime);
       durationLabel.textContent = formatTime(duration);
-      playButton.textContent = audio.paused ? '▶' : 'Ⅱ';
+      playButton.querySelector('.icon-play').hidden = !audio.paused;
+      playButton.querySelector('.icon-pause').hidden = audio.paused;
       playButton.setAttribute('aria-label',audio.paused ? 'เล่นเสียง' : 'พักเสียง');
     };
     playButton.addEventListener('click',()=> {
