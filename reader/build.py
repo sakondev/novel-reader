@@ -70,7 +70,7 @@ def layout(title, body, css, js, base, chapter=False, has_audio=False):
     script = f'<script defer src="{base}assets/reader.js"></script>' if js else ""
     font_css = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">'
     body_class = ' class="chapter-view"' if chapter else ""
-    listen_button = '<button id="audioToggle" type="button" aria-controls="audioPanel" aria-expanded="false" aria-label="เปิดเครื่องเล่นนิยายเสียง">🎧 ฟัง</button>' if has_audio else ""
+    listen_button = '<button id="audioToggle" type="button" aria-controls="audioPanel" aria-expanded="false" aria-label="เปิดเครื่องเล่นนิยายเสียง" title="ฟังนิยาย"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></button>' if has_audio else ""
     footer = "" if chapter else "<footer>Novel Reader · บันทึกตำแหน่งการอ่านบนอุปกรณ์ของคุณ</footer>"
     return f"""<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex"><meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet, noimageindex"><meta name="bingbot" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
@@ -157,10 +157,10 @@ def build(destination):
                          '<option value="1.25">1.25×</option><option value="1.5">1.5×</option>'
                          '<option value="2">2×</option></select>'
                          '<span id="audioStatus" role="status">พร้อมเล่นไฟล์เสียง</span></div></section>')
-            body = f'{resume}<main id="content" class="reader"><div class="eyebrow"><a href="../index.html">{html.escape(title)}</a></div>{subtitle}<article>{render_markdown(raw)}</article></main>{audio}{bottom}{picker}'
+            body = f'{resume}<main id="content" class="reader"><div class="book-heading"><a class="book-heading-title" href="../index.html">{html.escape(title)}</a>{subtitle}</div><article>{render_markdown(raw)}</article></main>{audio}{bottom}{picker}'
             chapter_dir = dest / f"chapter-{num:04}"
             chapter_dir.mkdir(exist_ok=True)
-            (chapter_dir / "index.html").write_text(layout(chapter_title, body, None, True, "../../", chapter=True, has_audio=bool(audio_url)), encoding="utf-8")
+            (chapter_dir / "index.html").write_text(layout(f"{chapter_title} | {title}", body, None, True, "../../", chapter=True, has_audio=bool(audio_url)), encoding="utf-8")
             # Preserve bookmarked .html links without serving duplicate full-text pages.
             link = f"chapter-{num:04}/"
             redirect = ('<!doctype html><html lang="th"><head><meta charset="utf-8">'
