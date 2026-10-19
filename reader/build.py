@@ -77,7 +77,7 @@ def layout(title, body, css, js, base, chapter=False, has_audio=False):
 <meta name="theme-color" content="#f7f3eb"><meta name="description" content="{html.escape(title, quote=True)}">
 <title>{html.escape(title)} · Novel Reader</title>{font_css}<link rel="stylesheet" href="{base}assets/style.css"></head>
 <body{body_class}><a class="skip" href="#content">ข้ามไปเนื้อหา</a><header class="site-head"><a class="brand" href="{base}index.html">NOVEL READER</a>
-<div class="tools">{listen_button}<button id="fontDown" type="button" aria-label="ลดขนาดตัวอักษร">A−</button><span id="fontSizeValue" class="font-value" aria-live="polite">19px</span><button id="fontUp" type="button" aria-label="เพิ่มขนาดตัวอักษร">A+</button>
+<div class="tools">{listen_button}<button id="fontDown" type="button" aria-label="ลดขนาดตัวอักษร">A−</button><button id="fontUp" type="button" aria-label="เพิ่มขนาดตัวอักษร">A+</button>
 <button id="theme" type="button" aria-label="เปลี่ยนธีม">◐</button></div></header>
 {body}{footer}{script}</body></html>"""
 
