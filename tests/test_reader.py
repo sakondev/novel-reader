@@ -90,8 +90,7 @@ class ReaderTests(unittest.TestCase):
             self.assertIn(' | Example Book', first)
             self.assertIn('id="chapterAudio"', first)
             self.assertIn('id="audioPlay"', first)
-            self.assertIn('class="icon-play"', first)
-            self.assertIn('class="icon-pause"', first)
+            self.assertIn('<polygon points="6 3 20 12 6 21 6 3"', first)
             self.assertNotIn('↶ 10', first)
             self.assertIn('id="audioSeek"', first)
             self.assertIn('กำลังอ่านตอนที่ 1', first)
@@ -106,6 +105,8 @@ class ReaderTests(unittest.TestCase):
             self.assertNotIn("ttsPanel", first)
             script = (Path(output) / "assets" / "reader.js").read_text(encoding="utf-8")
             self.assertNotIn("speechSynthesis", script)
+            self.assertIn("audio.paused ? playIcon : pauseIcon", script)
+            self.assertIn("playButton.innerHTML = icon", script)
 
     def test_slug(self):
         self.assertEqual(slugify("Pick Up Grimoire - Become a Mage"), "pick-up-grimoire-become-a-mage")

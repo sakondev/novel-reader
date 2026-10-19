@@ -56,13 +56,16 @@
       const value = Math.floor(seconds);
       return Math.floor(value / 60)+':'+String(value % 60).padStart(2,'0');
     };
+    // Lucide Play/Pause geometry; swap one SVG so the visible icon always matches audio state.
+    const playIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"/></svg>';
+    const pauseIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
     const syncPlayer = () => {
       const duration = Number.isFinite(audio.duration) ? audio.duration : 0;
       seek.value = duration ? String(Math.round(audio.currentTime / duration * 1000)) : '0';
       currentLabel.textContent = formatTime(audio.currentTime);
       durationLabel.textContent = formatTime(duration);
-      playButton.querySelector('.icon-play').hidden = !audio.paused;
-      playButton.querySelector('.icon-pause').hidden = audio.paused;
+      const icon = audio.paused ? playIcon : pauseIcon;
+      if (playButton.innerHTML !== icon) playButton.innerHTML = icon;
       playButton.setAttribute('aria-label',audio.paused ? 'เล่นเสียง' : 'พักเสียง');
     };
     playButton.addEventListener('click',()=> {
@@ -74,6 +77,7 @@
     seek.addEventListener('input',()=> { if (Number.isFinite(audio.duration)) audio.currentTime=audio.duration*Number(seek.value)/1000; });
     for (const eventName of ['loadedmetadata','timeupdate','play','pause','seeking','ended']) audio.addEventListener(eventName,syncPlayer);
     audio.addEventListener('contextmenu',event=>event.preventDefault());
+    syncPlayer();
     const playbackKey = key+'audio:'+location.pathname.replace(/index\.html$/,'').replace(/\.html$/,'/');
     const saved = Number(localStorage.getItem(playbackKey) || 0);
     audio.playbackRate = 1;

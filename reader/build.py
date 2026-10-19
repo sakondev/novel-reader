@@ -153,9 +153,9 @@ def build(destination):
                          '<button id="audioClose" type="button" aria-label="ปิดเครื่องเล่น"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>'
                          f'<audio id="chapterAudio" preload="metadata" controlslist="nodownload noplaybackrate" src="{safe_url}"></audio>'
                          '<div class="audio-controls">'
-                         '<button id="audioBack" type="button" aria-label="ย้อนกลับ 10 วินาที"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11a9 9 0 1 1 2.6 6.4M3 4v7h7"/><text x="12" y="15" text-anchor="middle">10</text></svg></button>'
-                         '<button id="audioPlay" type="button" aria-label="เล่นเสียง"><svg class="icon-play" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7z"/></svg><svg class="icon-pause" viewBox="0 0 24 24" aria-hidden="true" hidden><path d="M9 5v14M15 5v14"/></svg></button>'
-                         '<button id="audioForward" type="button" aria-label="ข้าม 10 วินาที"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11a9 9 0 1 0-2.6 6.4M21 4v7h-7"/><text x="12" y="15" text-anchor="middle">10</text></svg></button></div>'
+                         '<button id="audioBack" type="button" aria-label="ย้อนกลับ 10 วินาที"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11a9 9 0 1 1 2.6 6.4"/><path d="M3 4v7h7"/><text x="12" y="15" text-anchor="middle">10</text></svg></button>'
+                         '<button id="audioPlay" type="button" aria-label="เล่นเสียง"><svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"/></svg></button>'
+                         '<button id="audioForward" type="button" aria-label="ข้าม 10 วินาที"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11a9 9 0 1 0-2.6 6.4"/><path d="M21 4v7h-7"/><text x="12" y="15" text-anchor="middle">10</text></svg></button></div>'
                          '<input id="audioSeek" type="range" min="0" max="1000" value="0" aria-label="เลื่อนตำแหน่งเสียง">'
                          '<div class="audio-times"><span id="audioCurrent">0:00</span><span id="audioDuration">0:00</span></div>'
                          '<span id="audioStatus" class="sr-only" role="status"></span></section>')
