@@ -55,15 +55,18 @@ def book_title(path):
     if config.exists():
         data = config.read_text(encoding="utf-8")
         for k in ("title_th", "title_en"):
-            m = re.search(rf"(?m)^{k}:\s*[\"']?([^\r\n\"']+)", data)
-            if m and m.group(1).strip(): return m.group(1).strip()
+            m = re.search(rf'(?m)^{k}:\s*(.+)$', data)
+            if m:
+                value = m.group(1).strip().strip('"\'').strip()
+                if value: return value
+            if m and m.group(1).strip(): return m.group(1).strip().strip('"\'').strip()
     return path.name
 
 def book_title_en(path):
     config = path / "novel.yaml"
     if config.exists():
-        m = re.search(r'(?m)^title_en:\s*["\']?([^\r\n"\']+)', config.read_text(encoding="utf-8"))
-        if m and m.group(1).strip(): return m.group(1).strip()
+        m = re.search(r'(?m)^title_en:\s*(.+)$', config.read_text(encoding="utf-8"))
+        if m and m.group(1).strip(): return m.group(1).strip().strip('"\'').strip()
     return ""
 
 def layout(title, body, css, js, base, chapter=False, has_audio=False):
